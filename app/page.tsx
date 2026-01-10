@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Badge } from "@/ui/components/Badge";
 import { Button } from "@/ui/components/Button";
 import { IconButton } from "@/ui/components/IconButton";
 import { IconWithBackground } from "@/ui/components/IconWithBackground";
 import { TextFieldUnstyled } from "@/ui/components/TextFieldUnstyled";
 import { Navigation } from "@/ui/components/Navigation";
+import { TeaModal } from "@/components/TeaModal";
 import { FeatherArrowRight } from "@/subframe/core";
 import { FeatherBookOpen } from "@/subframe/core";
 import { FeatherCoffee } from "@/subframe/core";
@@ -21,10 +22,26 @@ import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
+  const [isTeaModalOpen, setIsTeaModalOpen] = useState(false);
+  const [teaQuery, setTeaQuery] = useState("");
+
+  const handleTeaSubmit = () => {
+    if (teaQuery.trim()) {
+      setIsTeaModalOpen(true);
+    }
+  };
 
   return (
     <>
       <Navigation />
+      <TeaModal
+        isOpen={isTeaModalOpen}
+        onClose={() => {
+          setIsTeaModalOpen(false);
+          setTeaQuery("");
+        }}
+        initialQuery={teaQuery}
+      />
       <div className="container max-w-none flex w-full flex-col items-center bg-gradient-to-b from-brand-50 to-white mobile:items-start mobile:justify-start">
         <div className="flex w-full flex-col items-center gap-12 px-6 py-12 mobile:flex-col mobile:flex-nowrap mobile:gap-8 mobile:px-6 mobile:py-8">
           <div className="flex w-full max-w-[1280px] flex-col items-center gap-6">
@@ -202,15 +219,18 @@ export default function Home() {
                 <TextFieldUnstyled className="h-auto grow shrink-0 basis-0">
                   <TextFieldUnstyled.Input
                     placeholder="Ask Tea about anything..."
-                    value=""
-                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {}}
+                    value={teaQuery}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => setTeaQuery(event.target.value)}
+                    onKeyPress={(e: React.KeyboardEvent) => {
+                      if (e.key === 'Enter') handleTeaSubmit();
+                    }}
                   />
                 </TextFieldUnstyled>
                 <IconButton
                   variant="brand-primary"
                   size="large"
                   icon={<FeatherSend />}
-                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+                  onClick={handleTeaSubmit}
                 />
               </div>
             </div>
@@ -229,7 +249,10 @@ export default function Home() {
               variant="brand-primary"
               size="large"
               icon={<FeatherUserPlus />}
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                // TODO: Open signup modal
+                alert('Signup coming in Phase 1.5!');
+              }}
             >
               Join Now
             </Button>
