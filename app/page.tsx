@@ -221,7 +221,7 @@ export default function Home() {
                     placeholder="Ask Tea about anything..."
                     value={teaQuery}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => setTeaQuery(event.target.value)}
-                    onKeyPress={(e: React.KeyboardEvent) => {
+                    onKeyDown={(e: React.KeyboardEvent) => {
                       if (e.key === 'Enter') handleTeaSubmit();
                     }}
                   />
