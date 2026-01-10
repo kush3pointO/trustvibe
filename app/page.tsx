@@ -216,16 +216,22 @@ export default function Home() {
               </div>
               <div className="flex h-16 w-full max-w-[768px] flex-none items-center justify-center gap-2 rounded-full border-2 border-solid border-brand-200 bg-white px-3 py-3 shadow-md mobile:h-14 mobile:w-full mobile:max-w-[768px] mobile:flex-none">
                 <FeatherMessageCircle className="text-heading-2 font-heading-2 text-brand-600" />
-                <TextFieldUnstyled className="h-auto grow shrink-0 basis-0">
-                  <TextFieldUnstyled.Input
-                    placeholder="Ask Tea about anything..."
-                    value={teaQuery}
-                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => setTeaQuery(event.target.value)}
-                    onKeyDown={(e: React.KeyboardEvent) => {
-                      if (e.key === 'Enter') handleTeaSubmit();
-                    }}
-                  />
-                </TextFieldUnstyled>
+                
+                <div 
+                  className="h-auto grow shrink-0 basis-0"
+                  onKeyDown={(e: React.KeyboardEvent) => {
+                    if (e.key === 'Enter') handleTeaSubmit();
+                  }}
+                >
+                  <TextFieldUnstyled className="h-full">
+                    <TextFieldUnstyled.Input
+                      placeholder="Ask Tea about anything..."
+                      value={teaQuery}
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setTeaQuery(event.target.value)}
+                    />
+                  </TextFieldUnstyled> 
+                </div>  
+
                 <IconButton
                   variant="brand-primary"
                   size="large"

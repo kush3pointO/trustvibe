@@ -125,7 +125,7 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -272,13 +272,15 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
         {/* Input */}
         {!showSignupBanner && (
           <div className="px-6 py-4 border-t border-neutral-200 bg-white">
-            <div className="flex items-center gap-2 bg-neutral-50 rounded-full px-4 py-2 border border-neutral-200 focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-100 transition-all">
+            <div 
+              className="flex items-center gap-2 bg-neutral-50 rounded-full px-4 py-2 border border-neutral-200 focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-100 transition-all"
+              onKeyDown={handleKeyDown}
+            >
               <TextFieldUnstyled className="flex-1">
                 <TextFieldUnstyled.Input
                   placeholder="Ask Tea anything..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
                   disabled={isLoading}
                 />
               </TextFieldUnstyled>
