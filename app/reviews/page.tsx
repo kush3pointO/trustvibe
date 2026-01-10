@@ -11,7 +11,7 @@ interface Service {
   id: string;
   name: string;
   category: string;
-  location: string;
+  location: string | null;
 }
 
 interface Review {
@@ -20,7 +20,7 @@ interface Review {
   content: string;
   is_recommended: boolean;
   created_at: string;
-  service: Service;
+  services: Service | null;
 }
 
 interface GroupedReviews {
@@ -30,7 +30,6 @@ interface GroupedReviews {
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewCount, setViewCount] = useState(0);
 
   useEffect(() => {
     fetchReviews();
@@ -46,7 +45,7 @@ export default function ReviewsPage() {
           content,
           is_recommended,
           created_at,
-          service:services (
+          services (
             id,
             name,
             category,
@@ -67,7 +66,9 @@ export default function ReviewsPage() {
 
   // Group reviews by category
   const groupedReviews: GroupedReviews = reviews.reduce((acc, review) => {
-    const category = review.service.category;
+    if (!review.services) return acc;
+    
+    const category = review.services.category;
     if (!acc[category]) {
       acc[category] = [];
     }
@@ -131,48 +132,52 @@ export default function ReviewsPage() {
                 {category}
               </span>
               <div className="flex w-full flex-col items-start gap-4">
-                {categoryReviews.map((review) => (
-                  <div
-                    key={review.id}
-                    className="flex w-full flex-col items-start gap-4 overflow-hidden rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6 shadow-sm"
-                  >
-                    <div className="flex w-full items-start gap-4">
-                      <Avatar size="medium">
-                        {getInitials(review.service.name)}
-                      </Avatar>
-                      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2">
-                        <div className="flex w-full items-center gap-2">
-                          <span className="grow shrink-0 basis-0 text-heading-3 font-heading-3 text-default-font">
-                            {review.title}
+                {categoryReviews.map((review) => {
+                  if (!review.services) return null;
+                  
+                  return (
+                    <div
+                      key={review.id}
+                      className="flex w-full flex-col items-start gap-4 overflow-hidden rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6 shadow-sm"
+                    >
+                      <div className="flex w-full items-start gap-4">
+                        <Avatar size="medium">
+                          {getInitials(review.services.name)}
+                        </Avatar>
+                        <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2">
+                          <div className="flex w-full items-center gap-2">
+                            <span className="grow shrink-0 basis-0 text-heading-3 font-heading-3 text-default-font">
+                              {review.title}
+                            </span>
+                            <span className="text-caption font-caption text-subtext-color">
+                              {formatDate(review.created_at)}
+                            </span>
+                          </div>
+                          <span className="w-full text-body font-body text-default-font">
+                            {review.content}
                           </span>
-                          <span className="text-caption font-caption text-subtext-color">
-                            {formatDate(review.created_at)}
-                          </span>
-                        </div>
-                        <span className="w-full text-body font-body text-default-font">
-                          {review.content}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {review.is_recommended ? (
-                            <>
-                              <FeatherThumbsUp className="text-body font-body text-success-600" />
-                              <span className="text-body-bold font-body-bold text-success-600">
-                                Recommended
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <FeatherThumbsDown className="text-body font-body text-error-600" />
-                              <span className="text-body-bold font-body-bold text-error-600">
-                                Not Recommended
-                              </span>
-                            </>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {review.is_recommended ? (
+                              <>
+                                <FeatherThumbsUp className="text-body font-body text-success-600" />
+                                <span className="text-body-bold font-body-bold text-success-600">
+                                  Recommended
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <FeatherThumbsDown className="text-body font-body text-error-600" />
+                                <span className="text-body-bold font-body-bold text-error-600">
+                                  Not Recommended
+                                </span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
