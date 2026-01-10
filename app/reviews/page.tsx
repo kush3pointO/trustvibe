@@ -20,15 +20,19 @@ interface Review {
   content: string;
   is_recommended: boolean;
   created_at: string;
-  services: Service | null;
+  service_id: string;
+}
+
+interface ReviewWithService extends Review {
+  service: Service;
 }
 
 interface GroupedReviews {
-  [category: string]: Review[];
+  [category: string]: ReviewWithService[];
 }
 
 export default function ReviewsPage() {
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<ReviewWithService[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,26 +41,34 @@ export default function ReviewsPage() {
 
   async function fetchReviews() {
     try {
-      const { data, error } = await supabase
+      // First get all reviews
+      const { data: reviewsData, error: reviewsError } = await supabase
         .from('reviews')
-        .select(`
-          id,
-          title,
-          content,
-          is_recommended,
-          created_at,
-          services (
-            id,
-            name,
-            category,
-            location
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (reviewsError) throw reviewsError;
 
-      setReviews(data || []);
+      // Then get all services
+      const { data: servicesData, error: servicesError } = await supabase
+        .from('services')
+        .select('*');
+
+      if (servicesError) throw servicesError;
+
+      // Combine them
+      const reviewsWithServices: ReviewWithService[] = (reviewsData || [])
+        .map(review => {
+          const service = servicesData?.find(s => s.id === review.service_id);
+          if (!service) return null;
+          return {
+            ...review,
+            service
+          };
+        })
+        .filter(Boolean) as ReviewWithService[];
+
+      setReviews(reviewsWithServices);
     } catch (error) {
       console.error('Error fetching reviews:', error);
     } finally {
@@ -66,9 +78,7 @@ export default function ReviewsPage() {
 
   // Group reviews by category
   const groupedReviews: GroupedReviews = reviews.reduce((acc, review) => {
-    if (!review.services) return acc;
-    
-    const category = review.services.category;
+    const category = review.service.category;
     if (!acc[category]) {
       acc[category] = [];
     }
@@ -132,52 +142,48 @@ export default function ReviewsPage() {
                 {category}
               </span>
               <div className="flex w-full flex-col items-start gap-4">
-                {categoryReviews.map((review) => {
-                  if (!review.services) return null;
-                  
-                  return (
-                    <div
-                      key={review.id}
-                      className="flex w-full flex-col items-start gap-4 overflow-hidden rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6 shadow-sm"
-                    >
-                      <div className="flex w-full items-start gap-4">
-                        <Avatar size="medium">
-                          {getInitials(review.services.name)}
-                        </Avatar>
-                        <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2">
-                          <div className="flex w-full items-center gap-2">
-                            <span className="grow shrink-0 basis-0 text-heading-3 font-heading-3 text-default-font">
-                              {review.title}
-                            </span>
-                            <span className="text-caption font-caption text-subtext-color">
-                              {formatDate(review.created_at)}
-                            </span>
-                          </div>
-                          <span className="w-full text-body font-body text-default-font">
-                            {review.content}
+                {categoryReviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="flex w-full flex-col items-start gap-4 overflow-hidden rounded-md border border-solid border-neutral-border bg-default-background px-6 py-6 shadow-sm"
+                  >
+                    <div className="flex w-full items-start gap-4">
+                      <Avatar size="medium">
+                        {getInitials(review.service.name)}
+                      </Avatar>
+                      <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2">
+                        <div className="flex w-full items-center gap-2">
+                          <span className="grow shrink-0 basis-0 text-heading-3 font-heading-3 text-default-font">
+                            {review.title}
                           </span>
-                          <div className="flex items-center gap-2">
-                            {review.is_recommended ? (
-                              <>
-                                <FeatherThumbsUp className="text-body font-body text-success-600" />
-                                <span className="text-body-bold font-body-bold text-success-600">
-                                  Recommended
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <FeatherThumbsDown className="text-body font-body text-error-600" />
-                                <span className="text-body-bold font-body-bold text-error-600">
-                                  Not Recommended
-                                </span>
-                              </>
-                            )}
-                          </div>
+                          <span className="text-caption font-caption text-subtext-color">
+                            {formatDate(review.created_at)}
+                          </span>
+                        </div>
+                        <span className="w-full text-body font-body text-default-font">
+                          {review.content}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {review.is_recommended ? (
+                            <>
+                              <FeatherThumbsUp className="text-body font-body text-success-600" />
+                              <span className="text-body-bold font-body-bold text-success-600">
+                                Recommended
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <FeatherThumbsDown className="text-body font-body text-error-600" />
+                              <span className="text-body-bold font-body-bold text-error-600">
+                                Not Recommended
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             </div>
           ))}
