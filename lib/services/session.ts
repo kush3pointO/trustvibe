@@ -41,7 +41,7 @@ export class SessionService {
   /**
    * Check if session has queries remaining
    */
-  static async canQuery(sessionId: string, maxQueries: number = 2): Promise<boolean> {
+  static async canQuery(sessionId: string, maxQueries: number = 20): Promise<boolean> {
     const session = await this.getOrCreateSession(sessionId);
     return session.query_count < maxQueries;
   }
@@ -69,7 +69,7 @@ export class SessionService {
   /**
    * Get remaining queries for a session
    */
-  static async getRemainingQueries(sessionId: string, maxQueries: number = 2): Promise<number> {
+  static async getRemainingQueries(sessionId: string, maxQueries: number = 20): Promise<number> {
     const session = await this.getOrCreateSession(sessionId);
     return Math.max(0, maxQueries - session.query_count);
   }

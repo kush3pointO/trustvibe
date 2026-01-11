@@ -1,12 +1,14 @@
 import { NextRequest } from 'next/server';
 import { SessionService } from '@/lib/services/session';
-import { ClaudeService } from '@/lib/services/claude-enhanced';
-
-export const runtime = 'edge';
+import { ClaudeService } from '@/lib/services/claude-with-serper';
 
 export async function POST(req: NextRequest) {
   try {
     const { query, sessionId } = await req.json();
+
+    console.log('=== TEA CHAT REQUEST ===');
+    console.log('Query:', query);
+    console.log('Session ID:', sessionId);
 
     if (!query || !sessionId) {
       return new Response(
@@ -18,6 +20,7 @@ export async function POST(req: NextRequest) {
     // Check if user can make more queries
     const canQuery = await SessionService.canQuery(sessionId);
     if (!canQuery) {
+      console.log('Query limit reached for session:', sessionId);
       return new Response(
         JSON.stringify({
           error: 'QUERY_LIMIT_REACHED',
@@ -29,12 +32,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    console.log('Query limit OK, proceeding with Claude...');
+
     // Create streaming response
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         try {
           let hasStartedResponse = false;
+          let toolsUsed: string[] = [];
 
           // Stream Claude's response with tool execution
           for await (const chunk of ClaudeService.streamMessage(query)) {
@@ -46,8 +52,11 @@ export async function POST(req: NextRequest) {
               continue;
             }
 
-            // Send tool use notifications (optional, for debugging)
+            // Log and send tool use notifications
             if (chunk.type === 'tool_use') {
+              console.log('🔧 TOOL USED:', chunk.toolName, 'with input:', chunk.toolInput);
+              toolsUsed.push(chunk.toolName || 'unknown');
+              
               const data = `data: ${JSON.stringify({
                 type: 'tool_use',
                 tool: chunk.toolName,
@@ -63,20 +72,29 @@ export async function POST(req: NextRequest) {
             }
           }
 
+          console.log('=== TOOLS SUMMARY ===');
+          console.log('Tools used in this request:', toolsUsed.length > 0 ? toolsUsed : 'NONE');
+          console.log('TrustVibe search used:', toolsUsed.includes('search_trustvibe_reviews') ? 'YES' : 'NO');
+          console.log('Web search used:', toolsUsed.includes('search_web') ? 'YES ✅' : 'NO ❌');
+
           // Increment query count
           await SessionService.incrementQueryCount(sessionId);
           const remaining = await SessionService.getRemainingQueries(sessionId);
+
+          console.log('Queries remaining:', remaining);
 
           // Send done message
           const doneData = `data: ${JSON.stringify({
             type: 'done',
             queriesRemaining: remaining,
+            toolsUsed: toolsUsed, // Include tools used in response
           })}\n\n`;
           controller.enqueue(encoder.encode(doneData));
 
+          console.log('=== REQUEST COMPLETE ===\n');
           controller.close();
         } catch (error) {
-          console.error('Streaming error:', error);
+          console.error('❌ STREAMING ERROR:', error);
           
           // Send error message
           const errorData = `data: ${JSON.stringify({
@@ -97,7 +115,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('API error:', error);
+    console.error('❌ API ERROR:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500 }

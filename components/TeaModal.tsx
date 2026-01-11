@@ -9,6 +9,7 @@ import { FeatherX, FeatherSend, FeatherCoffee, FeatherUserPlus } from '@/subfram
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  toolsUsed?: string[]; // Track which tools were used
 }
 
 interface TeaModalProps {
@@ -24,6 +25,7 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
   const [queriesRemaining, setQueriesRemaining] = useState(2);
   const [showSignupBanner, setShowSignupBanner] = useState(false);
   const [sessionId, setSessionId] = useState<string>('');
+  const [currentToolsUsed, setCurrentToolsUsed] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,6 +55,7 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
     setInput('');
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
+    setCurrentToolsUsed([]);
 
     try {
       const response = await fetch('/api/tea/chat', {
@@ -78,8 +81,9 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let assistantMessage = '';
+      const toolsUsed: string[] = [];
 
-      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: '', toolsUsed: [] }]);
 
       while (true) {
         const { done, value } = await reader!.read();
@@ -92,6 +96,13 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
           if (line.startsWith('data: ')) {
             const data = JSON.parse(line.slice(6));
 
+            if (data.type === 'tool_use') {
+              // Track tool usage
+              console.log('🔧 Tool used:', data.tool);
+              toolsUsed.push(data.tool);
+              setCurrentToolsUsed(prev => [...prev, data.tool]);
+            }
+
             if (data.type === 'chunk') {
               assistantMessage += data.content;
               setMessages(prev => {
@@ -99,6 +110,7 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
                 newMessages[newMessages.length - 1] = {
                   role: 'assistant',
                   content: assistantMessage,
+                  toolsUsed: toolsUsed,
                 };
                 return newMessages;
               });
@@ -107,6 +119,8 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
               if (data.queriesRemaining === 0) {
                 setShowSignupBanner(true);
               }
+              // Log final tools used
+              console.log('✅ Request complete. Tools used:', data.toolsUsed || toolsUsed);
             }
           }
         }
@@ -204,38 +218,77 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
           )}
 
           {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${
-                message.role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
-            >
+            <div key={index}>
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  message.role === 'user'
-                    ? 'bg-brand-600 text-white'
-                    : 'bg-neutral-100 text-default-font'
+                className={`flex ${
+                  message.role === 'user' ? 'justify-end' : 'justify-start'
                 }`}
               >
-                <p className="text-body whitespace-pre-wrap">{message.content}</p>
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                    message.role === 'user'
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-neutral-100 text-default-font'
+                  }`}
+                >
+                  <p className="text-body whitespace-pre-wrap">{message.content}</p>
+                </div>
               </div>
+              
+              {/* Show tools used badge for assistant messages */}
+              {message.role === 'assistant' && message.toolsUsed && message.toolsUsed.length > 0 && (
+                <div className="flex justify-start mt-2">
+                  <div className="flex gap-2 flex-wrap max-w-[80%]">
+                    {message.toolsUsed.includes('search_trustvibe_reviews') && (
+                      <span className="text-caption px-2 py-1 bg-brand-100 text-brand-700 rounded-full">
+                        📚 TrustVibe DB
+                      </span>
+                    )}
+                    {message.toolsUsed.includes('search_web') && (
+                      <span className="text-caption px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                        🌐 Web Search
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
 
           {isLoading && (
-            <div className="flex justify-start">
-              <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-neutral-100">
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-2 h-2 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div>
+              <div className="flex justify-start">
+                <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-neutral-100">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                    <span className="text-caption text-subtext-color">
+                      Tea is brewing your answer...
+                    </span>
                   </div>
-                  <span className="text-caption text-subtext-color">
-                    Tea is brewing your answer...
-                  </span>
                 </div>
               </div>
+              
+              {/* Show current tools being used */}
+              {currentToolsUsed.length > 0 && (
+                <div className="flex justify-start mt-2">
+                  <div className="flex gap-2 flex-wrap max-w-[80%]">
+                    {currentToolsUsed.includes('search_trustvibe_reviews') && (
+                      <span className="text-caption px-2 py-1 bg-brand-100 text-brand-700 rounded-full animate-pulse">
+                        📚 Searching TrustVibe...
+                      </span>
+                    )}
+                    {currentToolsUsed.includes('search_web') && (
+                      <span className="text-caption px-2 py-1 bg-green-100 text-green-700 rounded-full animate-pulse">
+                        🌐 Searching Web...
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
