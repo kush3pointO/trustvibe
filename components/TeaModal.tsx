@@ -155,14 +155,14 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 bg-gradient-to-r from-brand-50 to-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center">
-              <FeatherCoffee className="text-brand-600 w-5 h-5" />
+              <span className="text-xl">☕</span>
             </div>
             <div>
               <h2 className="text-heading-3 font-heading-3 text-default-font">
-                Tea
+                tea
               </h2>
               <p className="text-caption text-subtext-color">
-                Your TrustVibe Assistant
+                your vibe-check bestie
               </p>
             </div>
           </div>
@@ -186,31 +186,37 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
               <div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mb-4">
-                <FeatherCoffee className="text-brand-600 w-10 h-10" />
+                <span className="text-4xl">☕</span>
               </div>
               <h3 className="text-heading-3 font-heading-3 text-default-font mb-2">
-                Hi! I'm Tea ☕
+                hey! i'm tea
               </h3>
               <p className="text-body text-subtext-color max-w-md">
-                Ask me about any professional, service, or place. I'll search through
-                authentic TrustVibe community experiences to help you make informed decisions.
+                your vibe-check bestie. ask me about any professional, service, or place 
+                and i'll tell you how it actually felt for people in our community.
               </p>
               <div className="mt-6 space-y-2 w-full max-w-md">
                 <p className="text-caption-bold font-caption-bold text-neutral-700">
-                  Try asking:
+                  try asking:
                 </p>
                 <div className="space-y-2">
                   <button
-                    onClick={() => setInput('Tell me about therapists in Mumbai')}
+                    onClick={() => setInput('what\'s the vibe at therapists in Mumbai?')}
                     className="w-full text-left px-4 py-3 bg-neutral-50 hover:bg-neutral-100 rounded-lg text-body text-default-font transition-colors"
                   >
-                    "Tell me about therapists in Mumbai"
+                    "what's the vibe at therapists in Mumbai?"
                   </button>
                   <button
-                    onClick={() => setInput('What should I know about Dr. Priya Sharma?')}
+                    onClick={() => setInput('any chill divorce lawyers in Delhi?')}
                     className="w-full text-left px-4 py-3 bg-neutral-50 hover:bg-neutral-100 rounded-lg text-body text-default-font transition-colors"
                   >
-                    "What should I know about Dr. Priya Sharma?"
+                    "any chill divorce lawyers in Delhi?"
+                  </button>
+                  <button
+                    onClick={() => setInput('salons that actually know curly hair?')}
+                    className="w-full text-left px-4 py-3 bg-neutral-50 hover:bg-neutral-100 rounded-lg text-body text-default-font transition-colors"
+                  >
+                    "salons that actually know curly hair?"
                   </button>
                 </div>
               </div>
@@ -266,7 +272,7 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
                       <div className="w-2 h-2 bg-brand-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                     <span className="text-caption text-subtext-color">
-                      Tea is brewing your answer...
+                      tea is brewing your answer...
                     </span>
                   </div>
                 </div>
@@ -331,7 +337,7 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
             >
               <TextFieldUnstyled className="flex-1">
                 <TextFieldUnstyled.Input
-                  placeholder="Ask Tea anything..."
+                  placeholder="ask tea something..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   disabled={isLoading}
@@ -346,7 +352,7 @@ export function TeaModal({ isOpen, onClose, initialQuery }: TeaModalProps) {
               />
             </div>
             <p className="text-caption text-subtext-color mt-2 text-center">
-              Press Enter to send • Tea searches authentic TrustVibe reviews
+              press enter to send • tea searches real community vibes
             </p>
           </div>
         )}
