@@ -19,9 +19,9 @@ export function Button({
 }: ButtonProps) {
   const variantClasses = {
     'brand-primary': 'bg-brand-600 text-white hover:bg-brand-700',
+    'brand-secondary': 'bg-brand-100 text-brand-700 hover:bg-brand-200 border border-brand-300',
     'neutral': 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200',
     'success': 'bg-success-600 text-white hover:bg-success-700',
-    'brand-secondary': 'bg-brand-100 text-brand-700 hover:bg-brand-200 border border-brand-300',
   };
 
   const sizeClasses = {

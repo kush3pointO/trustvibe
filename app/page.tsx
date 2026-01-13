@@ -333,7 +333,7 @@ export default function Home() {
               Join 10,000+ people who check vibes before they book.
             </span>
             <Button
-              variant="neutral-primary"
+              variant="neutral"
               size="large"
               icon={<FeatherUserPlus />}
               onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
